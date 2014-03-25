@@ -1,0 +1,671 @@
+/*    Ext.define('MENU',{
+        extend: 'Ext.data.Model',
+        fields: [
+                 {name: 'menuName'},
+                 {name: 'menuType'}
+        ]
+    });
+    
+   var menuData = [
+        ['F5单据设置', '单据'],
+        ['F3查询设置', '查询'],
+        ['卡片输入口设置', '卡片']
+    ];
+
+    var menuDataJson = {'menu':[{"menuName":"F5单据设置","menuType":"单据"},
+                        {"menuName":"F5单据设置","menuType":"查询"},
+                        {"menuName":"卡片输入口设置","menuType":"卡片"}
+                        ]};
+    var storeJson = Ext.create('Ext.data.Store', {
+    	autoLoad: true,
+        model: 'MENU',
+        data : menuDataJson,
+        proxy: {
+            type: 'memory',
+            reader: {
+                type: 'json',
+                root: 'menu'
+            }
+        }
+    });
+
+    var data = Ext.create('Ext.data.Store', {
+        model: 'menu2',
+        data : [
+            {menuName : 'Ed',    menuType: 'Spencer'},
+            {menuName: 'Tommy', menuType: 'Maintz'},
+            {menuName: 'Aaron', menuType: 'Conran'},
+            {menuName: 'Jamie', menuType: 'Avins'}
+        ]
+    });
+    // create the data store
+/*    var store = Ext.create('Ext.data.ArrayStore', {
+        fields: [
+           {name: 'menuName'},
+           {name: 'menuType'}
+        ],
+        data: menuData
+    });
+    
+    var menuListRecord = Ext.data.Record.create([
+                                                 { name : 'menuName' },
+                                                 { name : 'menuType' }
+                                             ]);
+    var store2 = Ext.create('Ext.data.ArrayStore', {
+        proxy: new Ext.data.HttpProxy({url:"menu_xls.jsp"}),
+        reader : new Ext.data.XmlReader({
+            record : 'menuListRecord'
+        }, menuListRecord ),
+        sortInfo : {
+            field : 'menuName',
+            direction : 'DESC'
+        }// 排序信息
+    });*/
+    store2 = Ext.create('Ext.data.Store', {
+        model: 'MENU',
+        autoLoad: true,
+        proxy: {
+            // load using HTTP
+            type: 'ajax',
+            url: 'menu_xls.jsp',
+            // the return will be XML, so lets set up a reader
+            reader: {
+                type: 'xml',
+                // records will have an "Item" tag
+                record: 'menuListRecord',
+                idProperty: 'ASIN'
+            }
+        }
+    });*/
+
+
+
+
+    JbsManager.saveDataForFrame(
+        me.mainForm.databaseName,
+        me.mainForm.table.mainTable+","+me.mainForm.table.mainTableTemp,
+        me.mainForm.getRecDefine(),
+        me.mainGrid.table.detailTable+","+me.mainForm.table.detailTableTemp,
+        me.mainGrid.getRecDefine(),
+        me.mainForm.getDocumentNum(),
+        me.mainForm.getSeriaNum(),
+        m_workstation,
+        function(data){
+            var resultTag = data.split('|')[0];
+            if (resultTag == 'success'){
+                var doc_num = data.split('|')[1];
+                Ext.Msg.show({
+                    title:msgTitleTip,
+                    msg: '单据['+doc_num+']保存成功！',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.MessageBox.QUESTION
+                });
+            }else{
+                //Ext.getCmp(me.objId).getForm().loadRecord( orgRec );
+                if(resultTag == 'failure'){
+                    Ext.Msg.show({
+                        title:msgTitleWarning,
+                        msg: '单据保存失败，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                }else{
+                    Ext.Msg.show({
+                        title:msgTitleError,
+                        msg: '数据库异常，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
+            }
+        }
+    );
+/*----------------------------2013-11-07----------------------------------------*/
+    	public String DbProcessToJsonp( String sql ,String paramStr ,String rootName ,int start ,int limit ,String callbackStr ,String defaultRec ){
+        	Connection conn = null;
+        	ResultSet resultSet = null;
+        	PreparedStatement pst = null;
+        	int numberOfColumns = 0;
+            JSONArray jArray = new JSONArray();
+            JSONObject jObject = new JSONObject();
+            //System.out.println(defaultRec);
+        	try{
+        	    conn = DbProcManager.getConnection_ms();
+        	    pst=conn.prepareStatement(sql);
+        	    //System.out.println(sql);
+        	    pst.execute();
+        	    resultSet = pst.getResultSet();
+        	    ResultSetMetaData metaData = resultSet.getMetaData();
+        	    numberOfColumns = metaData.getColumnCount();
+        	    int count = 0;
+        	    while ( resultSet != null && resultSet.next() ) {
+        	    	JSONObject jObj = new JSONObject();
+                    for (int i = 1; i <= numberOfColumns; ++i) {
+                        String columnName = metaData.getColumnLabel(i);
+                        Object value = resultSet.getObject(i)==null?"":resultSet.getObject(i);
+                        jObj.put(columnName, value.toString());
+                    }
+                    jArray.put(jObj);
+                    ++count;
+        	    }
+    /*    	    if(count==0){
+        	    	String dr = "["+defaultRec+"]";
+        	    	//System.out.println(dr);
+        	    	JSONArray ja = new JSONArray(dr);
+        	    	JSONObject jObj = new JSONObject();
+                    for (int i = 0; i < ja.length() ; ++i) {
+                        String columnName = ja.getJSONObject(i).getString("name");
+                        String value = "";//ja.getJSONObject(i).getString("defaultRec");
+                        jObj.put(columnName, value);
+                    }
+                    jArray.put(jObj);
+                    ++count;
+        	    }
+    */    	    jObject.put(rootName, jArray.getJSONArraySection(start, limit)).put("totalCount",Integer.toString(count));
+        	    return callbackStr+"("+jObject.toString()+");";
+        	}catch(Exception ex){
+    			System.err.println("Error: Unable to get a connection: " + ex);
+    			ex.printStackTrace();
+    			return "";
+        	}finally{
+                try {
+                    resultSet.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                try {
+                	pst.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                try {
+                    conn.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }
+    	}
+----------------------------------------------------
+
+
+builderForm.prototype.setFormStatus = function(statusCode){
+    var me = this;
+    var fieldCount = me.colMArray.length;
+    if(me.statusCode == statusCode) return;
+
+    for(var i = 0 ; i<fieldCount ; ++i){
+        if(me.colMArray[i].hidden){
+            continue;
+        }
+        switch(statusCode){
+            case 0 :
+                if(!me.colMArray[i].readOnly&&me.colMArray[i].xtype!='numberfield'){
+                    Ext.getCmp(me.colMArray[i].id).setReadOnly(true);
+/*
+                    if(me.colMArray[i].position==''){
+                        Ext.getCmp(me.objId).getComponent(i).setReadOnly(true);
+                    }else{
+                        Ext.getCmp(me.objId).getComponent(parseInt(me.colMArray[i].position.split(',')[0])-1).getComponent(parseInt(me.colMArray[i].position.split(',')[1])-1).getComponent(0).setReadOnly(true);
+                    }*/
+                }
+                break;
+            case 1 :
+                if(!me.colMArray[i].readOnly&&me.colMArray[i].xtype!='numberfield'){
+                    Ext.getCmp(me.colMArray[i].id).setReadOnly(me.colMArray[i].readOnly);
+/*
+                    if(me.colMArray[i].position==''){
+                        Ext.getCmp(me.objId).getComponent(i).setReadOnly(me.colMArray[i].readOnly);
+                    }else{
+                        Ext.getCmp(me.objId).getComponent(parseInt(me.colMArray[i].position.split(',')[0])-1).getComponent(parseInt(me.colMArray[i].position.split(',')[1])-1).getComponent(0).setReadOnly(me.colMArray[i].readOnly);
+                    }*/
+                }
+                break;
+        }
+    }
+    if(!(me.detailObj == null || me.detailObj === undefined)){
+        me.detailObj.setGridStatus(statusCode);
+    }
+    me.formStatus = statusCode;
+};
+
+
+
+----------------------------------------------------------------
+
+/*
+builderForm.prototype.deleteRecord = function(_obj){
+    var me = this;
+    var rec = me.getRecord();
+    var seria_num = rec.get('seria_num');
+    JbsManager.delDataForForm(
+        me.databaseName,
+        me.table.mainTable,
+        me.table.mainTableTemp,
+        RecToStr( rec ),
+        function(data){
+            var resultTag = data.split('|')[0];
+            if (resultTag != 'success'){
+                if(resultTag == 'failure'){
+                    Ext.Msg.show({
+                        title:msgTitleWarning,
+                        msg: '单据删除失败，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                }else{
+                    Ext.Msg.show({
+                        title:msgTitleError,
+                        msg: '数据库异常，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
+                return;
+            }else{
+                var doc_num = data.split('|')[1];
+                Ext.Msg.show({
+                    title:msgTitleTip,
+                    msg: '单据['+doc_num+']删除成功！',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.MessageBox.QUESTION
+                });
+            }
+            me.prevForForm(me.table.mainTable ,seria_num ,"");
+            if(_obj!==undefined){
+                _obj.refresh();
+            }
+        }
+    );
+};
+
+builderForm.prototype.modifyDataForForm = function( rec ,_obj ){
+    var me = this;
+    var seria_num = rec.get("seria_num");
+    JbsManager.modifyDataForForm(
+        me.databaseName,
+        me.table.mainTable,
+        me.table.mainTableTemp,
+        RecToStr( rec ),
+        function(data){
+            var resultTag = data.split('|')[0];
+            if (resultTag != 'success'){
+                if(resultTag == 'failure'){
+                    Ext.Msg.show({
+                        title:msgTitleWarning,
+                        msg: '单据修改失败，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                }else{
+                    Ext.Msg.show({
+                        title:msgTitleError,
+                        msg: '数据库异常，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
+                return;
+            }else{
+                var doc_num = data.split('|')[1];
+                Ext.Msg.show({
+                    title:msgTitleTip,
+                    msg: '单据['+doc_num+']修改成功！',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.MessageBox.QUESTION
+                });
+            }
+            me.locateForForm(seria_num);
+            if(_obj!==undefined){
+                _obj.refresh();
+            }
+        }
+    );
+};
+
+builderForm.prototype.saveDataForForm = function( orgRec ,rec ,_obj ){
+    var me = this;
+    JbsManager.saveDataForForm(
+        me.databaseName,
+        me.table.mainTable,
+        me.table.mainTableTemp,
+        RecToStr( rec ),
+        function(data){
+            var resultTag = data.split('|')[0];
+            if (resultTag != 'success'){
+                Ext.getCmp(me.objId).getForm().loadRecord( orgRec );
+                if(resultTag == 'failure'){
+                    Ext.Msg.show({
+                        title:msgTitleWarning,
+                        msg: '单据保存失败，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                }else{
+                    Ext.Msg.show({
+                        title:msgTitleError,
+                        msg: '数据库异常，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
+                return;
+            }else{
+                var doc_num = data.split('|')[1];
+                Ext.Msg.show({
+                    title:msgTitleTip,
+                    msg: '单据['+doc_num+']保存成功！',
+                    buttons: Ext.Msg.OK,
+                    icon: Ext.MessageBox.QUESTION
+                });
+            }
+            me.newRecord();
+            if(_obj!==undefined){
+                _obj.refresh();
+            }
+        }
+    );
+};*/
+/*
+builderForm.prototype.UpdateDataForTempTable = function(document_num ,seria_num ,rec ,callback){
+    var me = this;
+    JbsManager.insertDataForForm(
+        me.databaseName,
+        me.table.mainTableTemp,
+        me.table.
+        RecToStr( rec ),
+        function(data){
+            var resultTag = data.split('|')[0];
+            if (resultTag != 'success'){
+                //Ext.getCmp(me.objId).getForm().loadRecord( orgRec );
+                loadMark(false);
+                if(resultTag == 'failure'){
+                    Ext.Msg.show({
+                        title:msgTitleWarning,
+                        msg: '单据未能更新在临时表中，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                }else{
+                    Ext.Msg.show({
+                        title:msgTitleError,
+                        msg: '数据库异常！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR
+                    });
+                }
+                return;
+            }
+            if(me.saveAgoProc === undefined){
+                //me.saveDataForForm(orgRec ,rec ,_obj);
+                callback(orgRec);
+            }else{
+                callback(orgRec);
+            }
+        }
+    )
+};*/
+/*
+builderForm.prototype.saveRecord = function(_obj){
+    var me = this;
+    if(me.formStatus==0)return;
+    var document_num = me.getRecord().get("document_num");
+    var orgRec = me.getRecord();
+    if(document_num==""){
+        JbsManager.getSeriaObj(
+            me.databaseName,
+            me.sys_id,
+            me.work_time,
+            me.seria_num_length,
+            function(data){
+                if(data=="{}"||data==""||data==null||data===undefined){
+                    Ext.Msg.show({
+                        title:msgTitleWarning,
+                        msg: '未能获得有效的单据编号，请重试！',
+                        buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.WARNING
+                    });
+                    return;
+                }
+                var seria_obj = eval('('+data+')');
+                var rec = me.getRecord();
+                rec.set("document_num" ,seria_obj.document_num);
+                rec.set("seria_num" ,seria_obj.seria_num);
+                rec.set("sys_id",me.sys_id);
+                rec.set("work_time",me.work_time);
+                var param = me.sys_id+','+me.work_time+','+seria_obj.document_num+','+sessionId;
+                JbsManager.insertDataForForm(
+                    me.databaseName,
+                    me.table.mainTableTemp,
+                    RecToStr( rec ),
+                    function(data){
+                        var resultTag = data.split('|')[0];
+                        if (resultTag != 'success'){
+                            Ext.getCmp(me.objId).getForm().loadRecord( orgRec );
+                            if(resultTag == 'failure'){
+                                Ext.Msg.show({
+                                    title:msgTitleWarning,
+                                    msg: '单据未能更新在临时表中，请重试！',
+                                    buttons: Ext.Msg.OK,
+                                    icon: Ext.MessageBox.WARNING
+                                });
+                            }else{
+                                Ext.Msg.show({
+                                    title:msgTitleError,
+                                    msg: '数据库异常！',
+                                    buttons: Ext.Msg.OK,
+                                    icon: Ext.MessageBox.ERROR
+                                });
+                            }
+                            return;
+                        }
+                        if(me.saveAgoProc === undefined){
+                            me.saveDataForForm(orgRec ,rec ,_obj);
+                        }else{
+                            JbsManager.commonEventProc(
+                                me.saveAgoProc,
+                                param,
+                                function(data){
+                                    var resultTag = data[0];
+                                    if(resultTag=='success'){
+                                        var result = eval(data[1])[0].result;
+                                        var tag = parseInt(result.split('|')[0]);
+                                        var resultMsg = result.split('|')[1] === undefined ? '' : result.split('|')[1];
+                                        switch(tag){
+                                            case -1 :   me.saveDataForForm(orgRec ,rec ,_obj);
+                                                        break;
+                                            case 0  :   Ext.Msg.show({
+                                                            title:msgTitleWarning,
+                                                            msg: resultMsg,
+                                                            buttons: Ext.Msg.OK,
+                                                            icon: Ext.MessageBox.WARNING});
+                                                        break;
+                                            case -2 :   Ext.Msg.show({
+                                                            title:msgTitleTip,
+                                                            msg: resultMsg,
+                                                            buttons: Ext.Msg.YESNO,
+                                                            icon: Ext.MessageBox.QUESTION,
+                                                            fn:function(result){
+                                                                if(result == 'yes'){
+                                                                    me.saveDataForForm(orgRec ,rec ,_obj);
+                                                                }
+                                                            }
+                                                        });
+                                                        break;
+                                        }
+                                    }else{
+                                        Ext.getCmp(me.objId).getForm().loadRecord( orgRec );
+                                        if(resultTag == 'error'){
+                                            Ext.Msg.show({
+                                                title:msgTitleWarning,
+                                                msg: '存盘处理程序执行失败，请重试！',
+                                                buttons: Ext.Msg.OK,
+                                                icon: Ext.MessageBox.WARNING
+                                            });
+                                        }else{
+                                            Ext.Msg.show({
+                                                title:msgTitleError,
+                                                msg: '其他错误，请重试！',
+                                                buttons: Ext.Msg.OK,
+                                                icon: Ext.MessageBox.ERROR
+                                            });
+                                        }
+                                    }
+                                }
+                            );
+                        }
+
+                    }
+                );
+            }
+        );
+    }else{
+        var rec = me.getRecord();
+        var seria_num = rec.get("seria_num");
+        var param = rec.get("sys_id")+','+rec.get("work_time")+','+rec.get("document_num")+','+sessionId;
+        JbsManager.insertDataForForm(
+            me.databaseName,
+            me.table.mainTableTemp,
+            RecToStr( rec ),
+            function(data){
+                var resultTag = data.split('|')[0];
+                if (resultTag != 'success'){
+                    if(resultTag == 'failure'){
+                        Ext.Msg.show({
+                            title:msgTitleWarning,
+                            msg: '单据未能在临时表中更新，请重试！',
+                            buttons: Ext.Msg.OK,
+                            icon: Ext.MessageBox.WARNING
+                        });
+                    }else{
+                        Ext.Msg.show({
+                            title:msgTitleError,
+                            msg: '数据库异常，请重试！',
+                            buttons: Ext.Msg.OK,
+                            icon: Ext.MessageBox.ERROR
+                        });
+                    }
+                    return;
+                }
+                if(me.saveAgoProc === undefined){
+                    me.modifyDataForForm(rec ,_obj);
+                }else{
+                    JbsManager.commonEventProc(
+                        me.saveAgoProc,
+                        param,
+                        function(data){
+                            if(data[0]=='success'){
+                                var result = eval(data[1])[0].result;
+                                var tag = parseInt(result.split('|')[0]);
+                                var resultMsg = result.split('|')[1] === undefined ? '' : result.split('|')[1];
+                                switch(tag){
+                                    case -1 :   me.modifyDataForForm(rec ,_obj);
+                                                break;
+                                    case 0  :   Ext.Msg.show({
+                                                    title:msgTitleWarning,
+                                                    msg: resultMsg,
+                                                    buttons: Ext.Msg.OK,
+                                                    icon: Ext.MessageBox.WARNING});
+                                                break;
+                                    case -2 :   Ext.Msg.show({
+                                                    title:msgTitleTip,
+                                                    msg: resultMsg,
+                                                    buttons: Ext.Msg.YESNO,
+                                                    icon: Ext.MessageBox.QUESTION,
+                                                    fn:function(result){
+                                                        if(result == 'yes'){
+                                                            me.modifyDataForForm(rec ,_obj);
+                                                        }
+                                                    }
+                                                });
+                                                break;
+                                }
+                            }else{
+                                if(resultTag == 'error'){
+                                    Ext.Msg.show({
+                                        title:msgTitleWarning,
+                                        msg: '存盘处理程序执行失败，请重试！',
+                                        buttons: Ext.Msg.OK,
+                                        icon: Ext.MessageBox.WARNING
+                                    });
+                                }else{
+                                    Ext.Msg.show({
+                                        title:msgTitleError,
+                                        msg: '其他错误，请重试！',
+                                        buttons: Ext.Msg.OK,
+                                        icon: Ext.MessageBox.ERROR
+                                    });
+                                }
+                            }
+                        }
+                    );
+                }
+            }
+        );
+    }
+};*/
+
+
+ed2k://|file|Elysium.2013.%E6%9E%81%E4%B9%90%E7%A9%BA%E9%97%B4.%E5%8F%8C%E8%AF%AD%E5%AD%97%E5%B9%95.%E5%9B%BD%E8%8B%B1%E5%8F%8C%E8%AF%AD.HR-HDTV.AAC.1024X576.x264.mkv|1642172754|c2eac67f7f1619d0aba56eeddc54fa36|h=biwg3ma5fgnsllsf7zhhvolgp4yem5e2|/
+
+
+{
+            text : fieldShowName,
+            dataIndex : fieldRawName,
+            menuDisabled : false,
+            hidden : !(_store.getAt(i).get('visible')=='1'),
+            align: _store.getAt(i).get('datatype')=='string'?'left':'right',
+            sortable: false,
+            editor : me.table!=''? (this.createEditor( _store.getAt(i).get('editable') ,_store.getAt(i).get('editorXType') ,me.objId )) : null,
+            flex: ( ( parseInt(_store.getAt(i).get('width')) ) == -1 ? 1 : null ),
+            width : parseInt(_store.getAt(i).get('width')),
+            summaryType: _store.getAt(i).get('summary')}
+
+
+
+
+
+
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------
+
+//            edit : function( editor, e, eOpts ){
+//	    		if(e.record.get('entry_num')!='0' && e.record.get('entry_num')!='' ){
+//	    			if( e.value != e.originalValue ){
+//                        me.updateRecord(e.record);
+/*
+	    				JbsManager.modifyDataForGrid(
+                            me.databaseName,
+                            me.table.detailTableTemp,
+                            me.table.detailTableTempView,
+                            RecToStr( e.record ),
+                            function(data){
+
+                            }
+                        );
+*/
+//	    			}
+//	    		}
+//	    	},
+
+
+        /*this.border = false;
+        //this.height = 600;
+        this.hideHeaders = true;
+        this.selModel = {
+            selType: 'cellmodel',
+            mode : 'SINGLE',
+            pruneRemoved: false,
+            listeners : {
+                selectionchange :function( ths, selected, eOpts ){
+                    if(me.mainTabpanelObj!=null && selected.length==1){
+                        me.mainTabpanelObj.activeModle(selected[0].get('sys_id'));
+                    }
+                }
+            }
+        };*/

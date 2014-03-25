@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context path="/">
+    <Resource name="jdbc/demo" auth="Container"
+              type="javax.sql.DataSource" maxActive="100"
+              driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+              url="jdbc:sqlserver://localhost:1433;DatabaseName=demo"
+              maxIdle="30" maxWait="10000" username="sa"
+              password="zaq1"/>
+</Context>

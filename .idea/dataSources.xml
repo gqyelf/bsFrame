@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" hash="1167095612">
+    <data-source source="LOCAL" name="Data Source" uuid="8be97307-5678-4fae-b6c1-65ea4d4fcf06">
+      <driver-ref>sqlserver.ms</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>com.microsoft.sqlserver.jdbc.SQLServerDriver</jdbc-driver>
+      <jdbc-url>jdbc:sqlserver://localhost:1433;databaseName=demo;user=sa;password=zaq1</jdbc-url>
+      <user-name>sa</user-name>
+      <user-password>dfd0dfcbdfdbdf9b</user-password>
+      <libraries>
+        <library>
+          <url>jar://$PROJECT_DIR$/../sqljdbc4-4.0.2206.100.jar!/</url>
+        </library>
+        <library>
+          <url>file://$PROJECT_DIR$/../sqlserver-driver-license.txt</url>
+        </library>
+      </libraries>
+    </data-source>
+  </component>
+</project>
+

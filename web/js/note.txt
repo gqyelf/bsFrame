@@ -1,0 +1,32 @@
+
+builderGrid.js---2013-08-19
+/*
+            		if(Ext.getCmp(ths.objId).getSelectionModel().getCurrentPosition()!==undefined){
+            			if(ths.colMArray[Ext.getCmp(ths.objId).getSelectionModel().getCurrentPosition().column].editorXType=='combofield'){
+                            var doc = eval('('+ths.colMArray[Ext.getCmp(ths.objId).getSelectionModel().getCurrentPosition().column].editorCfg+')');
+                            var gc = new gridCombo(doc ,'0001');
+                            gc.act(field.getEl());
+            			}else{
+                        	var pos = ths.getNextEditCellPosition(Ext.getCmp(_grid) ,Ext.getCmp(_grid).getSelectionModel().getCurrentPosition() ,field );
+                        	Ext.getCmp(_grid).getPlugin().startEditByPosition(pos);
+            			}
+            		}
+*/
+/*            		Ext.getCmp('main_frame_editgrid').columns[Ext.getCmp('main_frame_editgrid').getSelectionModel().getCurrentPosition().column].editorCfg;
+    	    		m_window.show();
+    	    		m_window.anchorTo(field.getEl(),'bl');
+*/
+/*            		Ext.Msg.alert('操作类型',ths.colMArray[Ext.getCmp(_grid).getSelectionModel().getCurrentPosition().column].afterOpt.optType);
+    	    		Ext.Msg.prompt(
+    	    				'操作类型',
+    	    				ths.colMArray[Ext.getCmp(_grid).getSelectionModel().getCurrentPosition().column].afterOpt.optType,
+    	    				function(btn, text){
+		    	    		    if (btn == 'ok'){
+		    	                	var pos = ths.getNextEditCellPosition(Ext.getCmp(_grid) ,Ext.getCmp(_grid).getSelectionModel().getCurrentPosition() ,field );
+		    	                	//var pos1 = {row:pos.row,column:0};
+		    	                	//Ext.getCmp('demo').getSelectionModel().setCurrentPosition(pos1);
+		    	                	Ext.getCmp(_grid).getPlugin().startEditByPosition(pos);
+
+		    	    		    }
+    	    				});
+*/
