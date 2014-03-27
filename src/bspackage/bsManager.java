@@ -917,7 +917,6 @@ public class bsManager {
         }
     }
 
-
     public String processIndexListSQL(String sql ,String value ){
         Connection conn = null;
         ResultSet resultSet = null;

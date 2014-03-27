@@ -1,209 +1,10 @@
+/**
+ * Created by Gqy on 2014-03-26.
+ */
 
-builderFrame.prototype.modelToolbar = function(ths){
-    var me = ths;
-    var modelToolbar = ['-',
-        {
-            icon:'images/page-first.gif',
-            cls:'x-btn-icon',
-            handler:function() {
-                me.mainForm.prevForForm(me.mainForm.table.mainTableView,-1,"");
-            }
-        },
-        {
-            icon:'images/page-prev.gif',
-            cls:'x-btn-icon',
-            handler:function() {
-                me.mainForm.prevForForm(me.mainForm.table.mainTableView,undefined,"");
-            }
-        },
-        {
-            icon:'images/page-next.gif',
-            cls:'x-btn-icon',
-            handler:function() {
-                me.mainForm.nextForForm(me.mainForm.table.mainTableView,undefined,"");
-            }
-        },
-        {
-            icon:'images/page-last.gif',
-            cls:'x-btn-icon',
-            handler:function() {
-                me.mainForm.nextForForm(me.mainForm.table.mainTableView,-1,"");
-            }
-        },'-',
-        {
-            icon:'images/Document.png',
-            cls:'x-btn-text-icon',
-            text : '新  增',
-            listeners:{
-                render:function(ths){
-                }
-            },
-            handler : function() {
-                if(m_set_permission!==undefined){
-                    var permissionTag = permissionCheck(m_set_permission,me.sysId,'add_permission');
-                    if(permissionTag==1){
-                        me.newProcess();
-                    }else{
-                        Ext.Msg.alert("提示信息 :","无此权限!");
-                    }
-                }
-            }
-        },'-',
-        {
-            icon:'images/Cut.png',
-            cls:'x-btn-text-icon',
-            text : '删  除',
-            listeners:{
-                render:function(ths){
-                }
-            },
-            handler : function() {
-                if(m_set_permission===undefined) {
-                    return;
-                }
-                var permissionTag = permissionCheck(m_set_permission,me.sysId,'del_permission');
-                if(permissionTag!=1){
-                    Ext.Msg.alert("提示信息 :","无此权限!");
-                    return;
-                }
-                var doc_num = me.mainForm.getRecord().get("document_num");
-                var ser_num = me.mainForm.getSeriaNum();
-                if(me.mainForm.formStatus != 0){
-                    Ext.Msg.show({
-                        title: msgTitleTip,
-                        msg: '单据['+doc_num+']正在修改，无法执行删除操作！',
-                        buttons: Ext.Msg.OK,
-                        icon: Ext.MessageBox.WARNING
-                    });
-                    return;
-                }
-                if(doc_num == '' || doc_num===undefined || ser_num == 0 || ser_num===undefined){
-                    showMessageBox(msgTitleWarning,"请选择需要删除的单据！",Ext.Msg.OK,Ext.MessageBox.WARNING);
-                    return;
-                }
-                Ext.Msg.show({
-                    title: msgTitleTip,
-                    msg: '单据['+doc_num+']是否删除，请确认！',
-                    buttons: Ext.Msg.YESNO,
-                    fn: function(result) {
-                        if (result == 'yes') {
-                            me.deleteProcess();
-                        }
-                    },
-                    icon: Ext.MessageBox.QUESTION
-                });
-            }
-        },'-',
-        {
-            icon:'images/Edit.png',
-            cls:'x-btn-text-icon',
-            text : '修  改',
-            listeners:{
-                render:function(ths){
-                }
-            },
-            handler : function() {
-                if(m_set_permission===undefined) {
-                    return;
-                }
-                var permissionTag = permissionCheck(m_set_permission,me.sysId,'write_permission');
-                if(permissionTag!=1){
-                    Ext.Msg.alert("提示信息 :","无此权限!");
-                    return;
-                }
-                var doc_num = me.mainForm.getDocumentNum();
-                var ser_num = me.mainForm.getSeriaNum();
-                if(doc_num == '' || doc_num===undefined || ser_num == 0 || ser_num===undefined){
-                    showMessageBox(msgTitleWarning,"请选择需要修改的单据！",Ext.Msg.OK,Ext.MessageBox.WARNING);
-                    return;
-                }
-                if(me.mainForm.formStatus==1){
-                    showMessageBox(msgTitleWarning,"单据["+doc_num+"]正在编辑中！",Ext.Msg.OK,Ext.MessageBox.WARNING);
-                    return;
-                }
-                me.modifyProcess()
-            }
-        },'-',
-        {
-            icon:'images/Save.png',
-            cls:'x-btn-text-icon',
-            text : '存  盘',
-            listeners:{
-                render:function(ths){
-                }
-            },
-            handler : function() {
-                if(me.mainForm.formStatus==1){
-                    me.SaveProcess();
-                }else{
-                    showMessageBox(msgTitleWarning,"请在新增或修改后执行存盘操作！",Ext.Msg.OK,Ext.MessageBox.WARNING);
-                }
-            }
-        },'-',
-        {
-            icon:'images/print.gif',
-            cls:'x-btn-text-icon',
-            text : '打  印',
-            listeners:{
-                render:function(ths){
-                }
-            },
-            handler : function() {
-                if(m_set_permission===undefined) {
-                    return;
-                }
-                var permissionTag = permissionCheck(m_set_permission,me.sysId,'print_permission');
-                if(permissionTag!=1){
-                    Ext.Msg.alert("提示信息 :","无此权限!");
-                    return;
-                }
-                showMessageBox(msgTitleWarning,"打印模块未设置！",Ext.Msg.OK,Ext.MessageBox.CANCEL);
-            }
-        },'-',
-        {
-            icon:'images/search.gif',
-            cls:'x-btn-text-icon',
-            text : '查  询',
-            listeners:{
-                render:function(ths){
-                    if(me.querySqlProc==null||me.querySqlProc==""){
-                        ths.disable();
-                    }else{
-                        ths.enable();
-                    }
-                }
-            },
-            handler : function() {
-                if(m_set_permission===undefined) {
-                    return;
-                }
-                var permissionTag = permissionCheck(m_set_permission,me.sysId,'query_permission');
-                if(permissionTag!=1){
-                    Ext.Msg.alert("提示信息 :","无此权限!");
-                    return;
-                }else{
-                    new builderSimpleQuery(me.systemdocument ,me.sysId +'viewportcenter' ,'panel',me);
-                }
-                //showMessageBox(msgTitleWarning,"查询模块未设置！",Ext.Msg.OK,Ext.MessageBox.CANCEL);
-            }
-        },'-','->','-','当前记录：',
-        {
-            id : me.sysId+'location',
-            xtype   : 'numberfield',
-            readOnly : true,
-            width   : 50
-        },' ','记录总数：',
-        {
-            id : me.sysId+'total',
-            xtype   : 'numberfield',
-            readOnly : true,
-            width   : 50
-        },'-'
-    ];
-    return modelToolbar;
-};
 
-function builderFrame (_databaseName ,_category ,_kind ,_sysId ,_pId ,_pType){
+
+function builderAdvQueryFrame (_databaseName ,_category ,_kind ,_sysId ,_pId ,_pType){
     this.databaseName = _databaseName;
     this.category = _category;
     this.kind = _kind;
@@ -251,7 +52,207 @@ function builderFrame (_databaseName ,_category ,_kind ,_sysId ,_pId ,_pType){
                             margins:'2 2 2 2',
                             border: true,
                             frame : false,
-                            tbar: me.modelToolbar(me)
+                            tbar: ['-',
+                                {
+                                    icon:'images/page-first.gif',
+                                    cls:'x-btn-icon',
+                                    handler:function() {
+                                        me.mainForm.prevForForm(me.mainForm.table.mainTableView,-1,"");
+                                    }
+                                },
+                                {
+                                    icon:'images/page-prev.gif',
+                                    cls:'x-btn-icon',
+                                    handler:function() {
+                                        me.mainForm.prevForForm(me.mainForm.table.mainTableView,undefined,"");
+                                    }
+                                },
+                                {
+                                    icon:'images/page-next.gif',
+                                    cls:'x-btn-icon',
+                                    handler:function() {
+                                        me.mainForm.nextForForm(me.mainForm.table.mainTableView,undefined,"");
+                                    }
+                                },
+                                {
+                                    icon:'images/page-last.gif',
+                                    cls:'x-btn-icon',
+                                    handler:function() {
+                                        me.mainForm.nextForForm(me.mainForm.table.mainTableView,-1,"");
+                                    }
+                                },'-',
+                                {
+                                    icon:'images/Document.png',
+                                    cls:'x-btn-text-icon',
+                                    text : '新  增',
+                                    listeners:{
+                                        render:function(ths){
+                                        }
+                                    },
+                                    handler : function() {
+                                        if(m_set_permission!==undefined){
+                                            var permissionTag = permissionCheck(m_set_permission,me.sysId,'add_permission');
+                                            if(permissionTag==1){
+                                                me.newProcess();
+                                            }else{
+                                                Ext.Msg.alert("提示信息 :","无此权限!");
+                                            }
+                                        }
+
+
+                                    }
+                                },'-',
+                                {
+                                    icon:'images/Cut.png',
+                                    cls:'x-btn-text-icon',
+                                    text : '删  除',
+                                    listeners:{
+                                        render:function(ths){
+                                        }
+                                    },
+                                    handler : function() {
+                                        if(m_set_permission===undefined) {
+                                            return;
+                                        }
+                                        var permissionTag = permissionCheck(m_set_permission,me.sysId,'del_permission');
+                                        if(permissionTag!=1){
+                                            Ext.Msg.alert("提示信息 :","无此权限!");
+                                            return;
+                                        }
+                                        var doc_num = me.mainForm.getRecord().get("document_num");
+                                        var ser_num = me.mainForm.getSeriaNum();
+                                        if(me.mainForm.formStatus != 0){
+                                            Ext.Msg.show({
+                                                title: msgTitleTip,
+                                                msg: '单据['+doc_num+']正在修改，无法执行删除操作！',
+                                                buttons: Ext.Msg.OK,
+                                                icon: Ext.MessageBox.WARNING
+                                            });
+                                            return;
+                                        }
+                                        if(doc_num == '' || doc_num===undefined || ser_num == 0 || ser_num===undefined){
+                                            showMessageBox(msgTitleWarning,"请选择需要删除的单据！",Ext.Msg.OK,Ext.MessageBox.WARNING);
+                                            return;
+                                        }
+                                        Ext.Msg.show({
+                                            title: msgTitleTip,
+                                            msg: '单据['+doc_num+']是否删除，请确认！',
+                                            buttons: Ext.Msg.YESNO,
+                                            fn: function(result) {
+                                                if (result == 'yes') {
+                                                    me.deleteProcess();
+                                                }
+                                            },
+                                            icon: Ext.MessageBox.QUESTION
+                                        });
+                                    }
+                                },'-',
+                                {
+                                    icon:'images/Edit.png',
+                                    cls:'x-btn-text-icon',
+                                    text : '修  改',
+                                    listeners:{
+                                        render:function(ths){
+                                        }
+                                    },
+                                    handler : function() {
+                                        if(m_set_permission===undefined) {
+                                            return;
+                                        }
+                                        var permissionTag = permissionCheck(m_set_permission,me.sysId,'write_permission');
+                                        if(permissionTag!=1){
+                                            Ext.Msg.alert("提示信息 :","无此权限!");
+                                            return;
+                                        }
+                                        var doc_num = me.mainForm.getDocumentNum();
+                                        var ser_num = me.mainForm.getSeriaNum();
+                                        if(doc_num == '' || doc_num===undefined || ser_num == 0 || ser_num===undefined){
+                                            showMessageBox(msgTitleWarning,"请选择需要修改的单据！",Ext.Msg.OK,Ext.MessageBox.WARNING);
+                                            return;
+                                        }
+                                        if(me.mainForm.formStatus==1){
+                                            showMessageBox(msgTitleWarning,"单据["+doc_num+"]正在编辑中！",Ext.Msg.OK,Ext.MessageBox.WARNING);
+                                            return;
+                                        }
+                                        me.modifyProcess()
+                                    }
+                                },'-',
+                                {
+                                    icon:'images/Save.png',
+                                    cls:'x-btn-text-icon',
+                                    text : '存  盘',
+                                    listeners:{
+                                        render:function(ths){
+                                        }
+                                    },
+                                    handler : function() {
+                                        if(me.mainForm.formStatus==1){
+                                            me.SaveProcess();
+                                        }else{
+                                            showMessageBox(msgTitleWarning,"请在新增或修改后执行存盘操作！",Ext.Msg.OK,Ext.MessageBox.WARNING);
+                                        }
+                                    }
+                                },'-',
+                                {
+                                    icon:'images/print.gif',
+                                    cls:'x-btn-text-icon',
+                                    text : '打  印',
+                                    listeners:{
+                                        render:function(ths){
+                                        }
+                                    },
+                                    handler : function() {
+                                        if(m_set_permission===undefined) {
+                                            return;
+                                        }
+                                        var permissionTag = permissionCheck(m_set_permission,me.sysId,'print_permission');
+                                        if(permissionTag!=1){
+                                            Ext.Msg.alert("提示信息 :","无此权限!");
+                                            return;
+                                        }
+                                        showMessageBox(msgTitleWarning,"打印模块未设置！",Ext.Msg.OK,Ext.MessageBox.CANCEL);
+                                    }
+                                },'-',
+                                {
+                                    icon:'images/search.gif',
+                                    cls:'x-btn-text-icon',
+                                    text : '查  询',
+                                    listeners:{
+                                        render:function(ths){
+                                            if(me.querySqlProc==null||me.querySqlProc==""){
+                                                ths.disable();
+                                            }else{
+                                                ths.enable();
+                                            }
+                                        }
+                                    },
+                                    handler : function() {
+                                        if(m_set_permission===undefined) {
+                                            return;
+                                        }
+                                        var permissionTag = permissionCheck(m_set_permission,me.sysId,'query_permission');
+                                        if(permissionTag!=1){
+                                            Ext.Msg.alert("提示信息 :","无此权限!");
+                                            return;
+                                        }else{
+                                            new builderSimpleQuery(me.systemdocument ,me.sysId +'viewportcenter' ,'panel',me);
+                                        }
+                                        //showMessageBox(msgTitleWarning,"查询模块未设置！",Ext.Msg.OK,Ext.MessageBox.CANCEL);
+                                    }
+                                },'-','->','-','当前记录：',
+                                {
+                                    id : me.sysId+'location',
+                                    xtype   : 'numberfield',
+                                    readOnly : true,
+                                    width   : 50
+                                },' ','记录总数：',
+                                {
+                                    id : me.sysId+'total',
+                                    xtype   : 'numberfield',
+                                    readOnly : true,
+                                    width   : 50
+                                },'-'
+                            ]
                         }
                     ]
                 });
@@ -261,11 +262,11 @@ function builderFrame (_databaseName ,_category ,_kind ,_sysId ,_pId ,_pType){
                 }
                 me.mainForm.initDetailObject(me.mainGrid);
                 me.initListIndex(listIndexProperty);
-/*                if(listIndexProperty!==undefined){
-                    me.indexList = new builderIndexList (listIndexProperty.sqlProc ,me.sysId+'_list' ,me.sysId+'viewportwest',me.mainForm);
-                }else{
-                    Ext.getCmp(me.sysId+'viewportwest').collapse();
-                }*/
+                /*                if(listIndexProperty!==undefined){
+                 me.indexList = new builderIndexList (listIndexProperty.sqlProc ,me.sysId+'_list' ,me.sysId+'viewportwest',me.mainForm);
+                 }else{
+                 Ext.getCmp(me.sysId+'viewportwest').collapse();
+                 }*/
                 if(me.pType == 'tabpanel'){
                     Ext.getCmp(me.pId).add({
                         title: me.systemdocument.sys_document[0].caption ,
@@ -311,7 +312,7 @@ builderFrame.prototype.UpdateDataForTempTable = function(document_num ,seria_num
     JbsManager.insertDataForForm(
         me.databaseName,
         me.mainForm.table.mainTableTemp,
-        me.mainGrid!=null?me.mainGrid.table.detailTableTemp:null,
+            me.mainGrid!=null?me.mainGrid.table.detailTableTemp:null,
         document_num ,
         seria_num ,
         RecToStr( rec ),
@@ -337,14 +338,14 @@ builderFrame.prototype.UpdateDataForTempTable = function(document_num ,seria_num
                             msg = '';
                         }
                         showMessageBox("单据未能更新在临时表中，数据库错误",msg,Ext.Msg.OK,Ext.MessageBox.WARNING);
-/*
-                        Ext.Msg.show({
-                            title:msgTitleError,
-                            msg: '数据库异常！',
-                            buttons: Ext.Msg.OK,
-                            icon: Ext.MessageBox.ERROR
-                        });
-*/
+                        /*
+                         Ext.Msg.show({
+                         title:msgTitleError,
+                         msg: '数据库异常！',
+                         buttons: Ext.Msg.OK,
+                         icon: Ext.MessageBox.ERROR
+                         });
+                         */
                     }
                 }
                 return;
@@ -375,10 +376,10 @@ builderFrame.prototype.saveDataForFrame = function(rec){
     var seriaNum = me.mainForm.getSeriaNum();
     JbsManager.saveDataForFrame(
         me.mainForm.databaseName,
-        me.mainForm.table.mainTable+","+me.mainForm.table.mainTableTemp,
+            me.mainForm.table.mainTable+","+me.mainForm.table.mainTableTemp,
         me.mainForm.getRecDefine(),
-        me.mainGrid!==null?me.mainGrid.table.detailTable+","+me.mainGrid.table.detailTableTemp:null,
-        me.mainGrid!==null?me.mainGrid.getRecDefine():null,
+            me.mainGrid!==null?me.mainGrid.table.detailTable+","+me.mainGrid.table.detailTableTemp:null,
+            me.mainGrid!==null?me.mainGrid.getRecDefine():null,
         me.mainForm.sys_id,
         me.mainForm.work_time,
         m_workstation,
@@ -412,14 +413,14 @@ builderFrame.prototype.saveDataForFrame = function(rec){
                     });
                 }else{
                     showMessageBox("单据未能更新在临时表中，数据库错误",msg,Ext.Msg.OK,Ext.MessageBox.WARNING);
-/*
-                    Ext.Msg.show({
-                        title:msgTitleError,
-                        msg: '数据库异常，请重试！',
-                        buttons: Ext.Msg.OK,
-                        icon: Ext.MessageBox.ERROR
-                    });
-*/
+                    /*
+                     Ext.Msg.show({
+                     title:msgTitleError,
+                     msg: '数据库异常，请重试！',
+                     buttons: Ext.Msg.OK,
+                     icon: Ext.MessageBox.ERROR
+                     });
+                     */
                 }
             }
         }
@@ -548,7 +549,7 @@ builderFrame.prototype.newProcess = function(){
     JbsManager.newDataForFrame(
         me.databaseName,
         me.mainForm.table.mainTableTemp,
-        me.mainGrid != null ? me.mainGrid.table.detailTableTemp : null,
+            me.mainGrid != null ? me.mainGrid.table.detailTableTemp : null,
         me.sysId,
         m_workstation,
         function(data){
@@ -602,7 +603,7 @@ builderFrame.prototype.deleteProcess = function(){
     JbsManager.deleteDataForFrame(
         me.databaseName,
         me.mainForm.table.mainTable,
-        me.mainGrid != null ? me.mainGrid.table.detailTable : null,
+            me.mainGrid != null ? me.mainGrid.table.detailTable : null,
         document_num,
         function(data){
             loadMark(false);
@@ -646,10 +647,10 @@ builderFrame.prototype.modifyProcess = function(){
     var me = this;
     JbsManager.loadDataToTableTemp(
         me.mainForm.databaseName,
-        me.mainForm.table.mainTable+","+me.mainForm.table.mainTableTemp,
+            me.mainForm.table.mainTable+","+me.mainForm.table.mainTableTemp,
         me.mainForm.getRecDefine(),
-        me.mainGrid!==null?me.mainGrid.table.detailTable+","+me.mainGrid.table.detailTableTemp:null,
-        me.mainGrid!==null?me.mainGrid.getRecDefine():null,
+            me.mainGrid!==null?me.mainGrid.table.detailTable+","+me.mainGrid.table.detailTableTemp:null,
+            me.mainGrid!==null?me.mainGrid.getRecDefine():null,
         me.mainForm.getDocumentNum(),
         me.mainForm.getSeriaNum(),
         m_workstation,
@@ -690,7 +691,7 @@ builderFrame.prototype.SaveProcess = function(){
                 JbsManager.checkSeriaNumForFrame(
                     me.databaseName,
                     me.mainForm.table.mainTable,
-                    me.mainGrid!==null?me.mainGrid.table.detailTable:null,
+                        me.mainGrid!==null?me.mainGrid.table.detailTable:null,
                     me.mainForm.sys_id,
                     me.mainForm.work_time,
                     _seria_num,
