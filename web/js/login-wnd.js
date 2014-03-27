@@ -38,6 +38,7 @@ var LoginIPanel = new Ext.FormPanel({
                         listeners:{
                             render : function(ths){
                                 console.log("render ok"+ths.name);
+                                ths.focus(false,200);
                             },
                             show : function(ths){
                                 console.log("show ok"+ths.name);
@@ -139,12 +140,6 @@ var LoginIPanel = new Ext.FormPanel({
             }
         ],
         listeners:{
-            render : function(ths){
-                console.log("render ok"+ths.id);
-            },
-            show : function(ths){
-                console.log("show ok"+ths.id);
-            },
             tabchange:function(t, p) {
                 if (p.getId() == 'login_input') {
                     Ext.getCmp('loginwnd_ok').setText('登 录');
@@ -173,13 +168,6 @@ var login_wnd_cfg = {
     closeAction : 'hide',
     plain       : true,
     listeners:{
-        render : function(ths){
-            console.log("render ok"+ths.id);
-        },
-        show : function(ths){
-            Ext.getCmp('login_input_userid').focus();
-            console.log("show ok"+ths.id);
-        },
         hide :    function(ts){
             //Ext.Msg.alert(msgTitleTip ,"您登陆的门店已撤柜！");
             //if(disableLoginOutlet == 1){Ext.Msg.alert(msgTitleTip ,"您登陆的门店已撤柜！");}
