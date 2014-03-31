@@ -6,6 +6,7 @@ function builderSimpleQuery (_systemdocument ,_pid ,_pType ,parentObj){
     var sysdoc = _systemdocument.sys_document[0];
     var sysproperty = eval('('+sysdoc.property+')');
     this.sys_id = sysdoc.sys_id;
+    this.caption_text =sysdoc.caption+"——查询";
     this.objId = sysdoc.sys_id+'Query';
     this.parentId = _pid;
     this.parentObj = parentObj;
@@ -139,7 +140,7 @@ builderSimpleQuery.prototype.createObject = function(ths){
     });
     me.queryWndCfg={
         id            : me.objId,
-        title        : '管理系统系统登录',
+        title        : me.caption_text,
         layout      : 'border',
         width       : Ext.getCmp(me.parentId).getSize().width,
         height      : Ext.getCmp(me.parentId).getSize().height,
