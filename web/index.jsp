@@ -24,7 +24,7 @@
     <script type="text/javascript" src="ext4/ux/statusbar/StatusBar.js"></script>
     <script type="text/javascript">
         var sessionId = '<%=session.getId()%>';
-        var m_sysId = '<%=sysId%>';
+        var m_sysId = "<%=sysId%>";
         var m_databaseName = '<%=databaseName%>';
     </script>
     <script type="text/javascript" src="js/commen.js"></script>
@@ -33,6 +33,7 @@
     <script type="text/javascript" src="js/builderForm.js"></script>
     <script type="text/javascript" src="js/builderGrid.js"></script>
     <script type="text/javascript" src="js/builderSimpleQuery.js"></script>
+    <script type="text/javascript" src="js/builderAdvQuery.js"></script>
     <script type="text/javascript" src="js/builderFrame.js"></script>
     <script type="text/javascript" src="js/mainFrame.js"></script>
     <script type="text/javascript" src="js/builderTabPanel.js"></script>

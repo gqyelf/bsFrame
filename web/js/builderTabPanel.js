@@ -86,7 +86,7 @@ function builderTabPanel (_databaseName ,_category ,_kind ,_sysId ,_pId){
     );
 }
 
-builderTabPanel.prototype.activeModle = function(_sys_id){
+builderTabPanel.prototype.activeModle = function(_sys_id ,_type){
     var me = this;
     loadMark(true);
     JbsManager.loadSysDocument(
@@ -101,7 +101,12 @@ builderTabPanel.prototype.activeModle = function(_sys_id){
             for(var i = 0 ; i<mArray.length ;++i){
                 if(mArray[i].sys_id == _sys_id ){
                     Ext.getCmp(me.sysId+'tabpanel').removeAll(true);
-                    new builderFrame(me.databaseName,mArray[i].category,mArray[i].kind,mArray[i].sys_id,me.sysId+'tabpanel','tabpanel');
+                    if(_type == "model"){
+                        new builderFrame(me.databaseName,mArray[i].category,mArray[i].kind,mArray[i].sys_id,me.sysId+'tabpanel','tabpanel');
+                    }
+                    if(_type == "inquiry"){
+                        new builderAdvQueryFrame(me.databaseName,mArray[i].category,mArray[i].kind,mArray[i].sys_id,me.sysId+'tabpanel','tabpanel');
+                    }
                     break;
                 }
             }

@@ -235,7 +235,8 @@ function builderFrame (_databaseName ,_category ,_kind ,_sysId ,_pId ,_pType){
                     if(property.querySqlProc!==undefined&&property.querySqlProc!=""){
                         me.querySqlProc = property.querySqlProc;
                     }
-                    me.hasGrid = !( property.detailTable == "" || property.detailTable === undefined || property.detailTableTemp === undefined || property.detailTableView === undefined )
+                    //me.hasGrid = !( property.detailTable == "" || property.detailTable === undefined || property.detailTableTemp === undefined || property.detailTableView === undefined );
+                    me.hasGrid = !( property.detailTableView === undefined || property.detailTableView === "" );
                 }
                 Ext.create('Ext.container.Container', {
                     id:me.sysId+'viewport',

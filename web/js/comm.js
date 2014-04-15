@@ -273,6 +273,4 @@ var queryMenu = new Ext.menu.Menu({
             }
         }
     ]
-
 });
-

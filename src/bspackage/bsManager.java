@@ -746,6 +746,85 @@ public class bsManager {
         }
     }
 
+/*
+    Connection conn = getConnection_ms("demo");
+    CallableStatement proc = null;
+    ResultSet rs = null;
+    try {
+        //conn.setTransactionIsolation(Connection.TRANSACTION_REPEATABLE_READ);
+        proc = conn.prepareCall("{ call saveField2(?,?,?,?,?) }");
+        proc.setString(1, tableName);
+        proc.setInt(2, entry_num);
+        proc.setString(3, workstation);
+        proc.setString(4, fieldName);
+        proc.setString(5, value);
+        rs = proc.executeQuery();
+        if (rs != null && rs.next()) {
+            result = rs.getString(fieldName);
+        }
+    } catch (Exception e) {
+        result = "";
+        e.printStackTrace();
+    }
+*/
+    public String [] processAdvQueryFields(String sqlProc ,String parameter ,String dbName){
+        Connection conn = null;
+        ResultSet resultSet = null;
+        CallableStatement proc = null;
+        int numberOfColumns = 0;
+        String [] fields = parameter.split("|");
+        String [] result = new String [2];
+        String parameterStr = "";
+        for(int i = 0 ; i<fields.length ; ++i){
+            parameterStr = parameterStr+'?';
+            if( (i+1) < fields.length ){
+                parameterStr = parameterStr+',';
+            }
+        }
+        try{
+            conn = getConnection_ms(dbName);
+            proc = conn.prepareCall("{ call "+sqlProc+"("+parameterStr+") }");
+            for(int i = 0 ; i<fields.length ; ++i){
+                proc.setString(i+1, fields[i]);
+            }
+            resultSet = proc.executeQuery();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            numberOfColumns = metaData.getColumnCount();
+            int count = 0;
+            JSONArray jArray = new JSONArray();
+            for (int i = 1; i <= numberOfColumns; ++i) {
+                JSONObject jObj = new JSONObject();
+                jObj.put("name",metaData.getColumnLabel(i));
+                jObj.put("type","string");
+                jArray.put(jObj);
+            }
+            result[0] = "success";
+            result[1] = jArray.toString();
+            return result;
+        }catch(Exception ex){
+            result[0] = "error";
+            result[1] = ex.getMessage();
+            return result;
+        }finally{
+            try {
+                resultSet.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                proc.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                conn.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+
     public JSONArray processTreeData( JSONArray _jArray ,String _itemKey ,String _parentKey ,JSONArray _jArray2 ,int type){
         JSONArray jarray = new JSONArray();
         if(_jArray2==null){
@@ -1112,6 +1191,62 @@ public class bsManager {
             paramTag = paramTag + "?,";
         }
         paramTag = paramTag+"?,?";
+        System.out.println(paramTag);
+        try {
+            proc = conn.prepareCall("{ call "+sqlProcName+" ("+paramTag+") }");
+            for(int i = 0 ; i<paramArray.length ; ++i){
+                proc.setString(i+1,paramArray[i]);
+            }
+            proc.setInt(paramArray.length+1,_row);
+            proc.setInt(paramArray.length+2,_column);
+
+            resultSet = proc.executeQuery();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            numberOfColumns = metaData.getColumnCount();
+            JSONArray jArray = new JSONArray();
+            while ( resultSet != null && resultSet.next() ) {
+                JSONObject jObj = new JSONObject();
+                for (int i = 1; i <= numberOfColumns; ++i) {
+                    String columnName = metaData.getColumnLabel(i);
+                    jObj.put(columnName,( resultSet.getObject(i)==null ? "" : resultSet.getObject(i).toString() ) );
+                }
+                jArray.put(jObj);
+            }
+            result[0] = "success";
+            result[1] = jArray.toString();
+            resultSet.close();
+        } catch (Exception e) {
+            result[0] = "error";
+            result[1] = e.getMessage();
+            e.printStackTrace();
+        } finally{
+            try {
+                proc.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            try {
+                conn.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return result;
+    }
+/*
+    public String commonEnterEventProcAdv(String sqlProcName ,String param ,int _row ,int _column){
+        String [] result = new String[2];
+        Connection conn = DbProcManager.getConnection_ms();
+        ResultSet resultSet = null;
+        int numberOfColumns = 0;
+        CallableStatement proc = null;
+        //System.out.println(param);
+        String [] paramArray = param.split(",",-2);
+        String paramTag = "";
+        for(int i = 0 ; i<paramArray.length ; ++i){
+            paramTag = paramTag + "?,";
+        }
+        paramTag = paramTag+"?,?";
         //System.out.println(paramTag);
         try {
             proc = conn.prepareCall("{ call "+sqlProcName+" ("+paramTag+") }");
@@ -1154,7 +1289,7 @@ public class bsManager {
         }
         return result;
     }
-
+*/
     public String insertDataForGrid ( String databasename ,String tablename ,String jsonObjStr ){
         String result;
         Connection conn = getConnection_ms(databasename);

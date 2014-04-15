@@ -253,3 +253,15 @@ Object.prototype.getKV = function(key){
     }
     return result;
 };*/
+
+
+function RecordToString(rec){
+    var fieldsCount = rec.fields.getCount();
+    var recArray = [];
+    for(var i = 0 ; i<fieldsCount ; ++i){
+        var fieldName = rec.fields.get(i).name;
+        if(fieldName=='id') continue;
+        recArray.push(rec.get(fieldName));
+    }
+    return recArray.toString();
+}

@@ -1,5 +1,5 @@
 
-function builderForm ( _systemdocument ,_pid ,_pType ){
+function builderForm ( _systemdocument ,_pid ,_pType ,_region){
 	var me = this;
     var sysdoc = _systemdocument.sys_document[0];
     var sysproperty = eval('('+sysdoc.property+')');
@@ -13,6 +13,7 @@ function builderForm ( _systemdocument ,_pid ,_pType ){
         }
     }
 	this.objId = sysdoc.sys_id+'Form';
+    this.region = _region;
     this.work_time = sysproperty.work_time == '0' ? '0000':m_worktime;
     this.seria_num_length = parseInt(sysproperty.seria_num_length);
     this.saveAgoProc = sysproperty.saveAgoProc;
@@ -835,7 +836,7 @@ builderForm.prototype.createFormPanel = function(_store,_sql){
         bodyPadding: 10,
         border : false,
         autoScroll : true,
-        region : 'center',
+        region : me.region===undefined ? 'center' :me.region,
         layout: 'anchor',
         frame : false,
         defaults:{

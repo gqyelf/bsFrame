@@ -8,6 +8,14 @@ function builderGrid ( _systemdocument ,_pid ,_pType ){
     this.work_time = sysproperty.work_time == '0' ? '0000':m_worktime;
 	this.objId = sysdoc.sys_id+'Grid';
     this.sys_id = sysdoc.sys_id;
+    this.sys_id_v = "";
+    this.otherCfg = sysproperty.otherCfg;
+    if(this.otherCfg!==undefined && this.otherCfg.sys_id_v != undefined ){
+        var sys_id_v = this.otherCfg.sys_id_v;
+        if(sys_id_v != ""){
+            this.sys_id_v = sys_id_v;
+        }
+    }
     this.mainObj = null;
     this.defaultRecord;
     this.emptyRecord;
@@ -23,6 +31,11 @@ function builderGrid ( _systemdocument ,_pid ,_pType ){
         detailTableView : sysproperty.detailTableView==''||sysproperty.detailTableView === undefined ? sysproperty.detailTable : sysproperty.detailTableView,
         detailTableTempView : sysproperty.detailTableTempView==''||sysproperty.detailTableTempView === undefined ? sysproperty.detailTableTemp : sysproperty.detailTableTempView
     };
+    if(this.table.detailTableTemp==''){
+        this.actionModel = true;
+    }else{
+        this.actionModel = false;
+    }
     this.gridHeight = sysproperty.detailGridHight;
 	this.pType = _pType;
     this.gridStore = null;
@@ -267,7 +280,7 @@ builderGrid.prototype.getNextPosition = function( currentPos ){
                 return nextPos;
             }else{
                 var insertRec = gridObj.getStore().getAt(currentPos.row);
-                if(insertRec.get("entry_num")=='0'){
+                if(insertRec.get("entry_num")=='0'&&me.table.detailTableTemp!=""){
                     insertRec.set("entry_num",currentPos.row+1);
                     insertRec.set("seria_num",me.mainObj.getSeriaNum());
                     insertRec.set("work_time",me.mainObj.getWorkTime());
@@ -279,6 +292,9 @@ builderGrid.prototype.getNextPosition = function( currentPos ){
                         function(data){
                         }
                     );
+                }
+                if(me.table.detailTableTemp==""){
+                    return currentPos;
                 }
                 gridObj.getStore().add(Ext.create('sys_document_order_detail'+me.objId, {}));
                 return { row:(currentPos.row +1),column:0 };
@@ -377,7 +393,7 @@ builderGrid.prototype.locateForGrid = function(_seria_num ,_sql){
             dbName	    :	me.databaseName,
             defaultRec	:	jsonToStr(eval('sys_document_order_detail'+me.objId)),
             sessionId	:	sessionId,
-            sysid       :   me.sys_id,
+            sysid       :   me.sys_id_v == "" ? me.sys_id : me.sys_id_v,
             worktime    :   me.mainObj===null?'0000':me.mainObj.getWorkTime(),
             seria_num   :   seria_num,
             table		:	me.table.detailTableView,
@@ -394,18 +410,25 @@ builderGrid.prototype.locateForGrid = function(_seria_num ,_sql){
 builderGrid.prototype.updateGridViewer = function(workstation_id,seria_num){
     var me = this;
     if(me.gridStore == null) return;
+    var paramsCfg = {
+        dbName	    :	me.databaseName,
+        defaultRec	:	jsonToStr(eval('sys_document_order_detail'+me.objId)),
+        sessionId	:	sessionId,
+        sysid       :   me.sys_id_v == "" ? me.sys_id : me.sys_id_v,
+        worktime    :   me.mainObj===null?'0000':me.mainObj.getWorkTime(),
+        seria_num   :   seria_num,
+        //table		:	me.actionModel ? me.table.detailTableView : me.table.detailTableTempView,
+        sql			:   ""
+        //workstationId:  workstation_id
+    };
+    if(me.actionModel){
+        paramsCfg.table = me.table.detailTableView;
+    }else{
+        paramsCfg.table = me.table.detailTableTempView;
+        paramsCfg.workstationId = workstation_id;
+    }
     me.gridStore.reload({
-        params : {
-            dbName	    :	me.databaseName,
-            defaultRec	:	jsonToStr(eval('sys_document_order_detail'+me.objId)),
-            sessionId	:	sessionId,
-            sysid       :   me.sys_id,
-            worktime    :   me.mainObj===null?'0000':me.mainObj.getWorkTime(),
-            seria_num   :   seria_num,
-            table		:	me.table.detailTableTempView,
-            sql			:   "",
-            workstationId:  workstation_id
-        },
+        params : paramsCfg,
         callback : function(r,opt,success){
             if(me.mainObj!=null){
                 me.setGridStatus(me.mainObj.formStatus);
@@ -528,7 +551,7 @@ builderGrid.prototype.createColumnObj = function(_columnOrig ,_isReadOnly){
         columnCfg.items = [{
             icon : 'images/btn/'+icon+'.png',
             handler: function(grid,rowIndex,colIndex){
-                var extParam = columnCfg.extParam;
+/*                var extParam = columnCfg.extParam;
                 var extendParamCfg = (extParam === undefined ? '' : extParam.split(';')[0]);
                 var extendFormParamCfg;
                 if(extParam !== undefined && extParam.split(';')[1]!==undefined){
@@ -549,20 +572,41 @@ builderGrid.prototype.createColumnObj = function(_columnOrig ,_isReadOnly){
                 }
                 if(extendFormParaml!=''){
                     parameters=parameters+extendFormParaml;
-                }
+                }*/
+                var rec = grid.getStore().getAt(rowIndex);
+                var extParam = columnCfg.editorCfg.extParam;
+                var extendParamCfg = (extParam === undefined ? '' : extParam.split(';')[0]);
+                var parameters = me.sys_id +','+ me.work_time+','+m_workstation+','+me.getParameters(extendParamCfg,rec);
+                loadMark(true);
                 JbsManager.commonEnterEventProc(
-                    columnCfg.extOpt,
+                    columnCfg.extOpt.sqlProc,
                     parameters,
                     rowIndex,
                     colIndex,
                     function(data){
+                        loadMark(false);
                         var resultTag = data[0];
+                        var resultObject = eval(data[1]);
                         if(resultTag=='success'){
-                            if(me.detailObj!=null){
-                                me.detailObj.updateGridViewer(sessionId,me.getSeriaNum());
+                            if(resultObject.constructor.name=="Array" && resultObject.length > 0){
+                                if(resultObject[0].result.split('|')[0]=='-1'){
+                                    Ext.Msg.show({
+                                        title:"提示",
+                                        msg: resultObject[0].result.split('|')[1]===undefined ? "执行完成，按确认继续 ！" : resultObject[0].result.split('|')[1],
+                                        buttons: Ext.Msg.OK,
+                                        fn : function(bt,text,opt){
+
+                                            if(me.actionModel){
+                                                me.updateGridViewer(sessionId,me.mainObj.getSeriaNum());
+                                            }
+                                        }
+                                    });
+                                }else{
+                                    var resultMsg = resultObject[0].result.split('|')[1]===undefined ? "错误编号：000000 ！" : resultObject[0].result.split('|')[1];
+                                    showMessageBox(msgTitleWarning,resultMsg,Ext.Msg.OK,Ext.MessageBox.WARNING);
+                                }
                             }
                         }else{
-                            loadMark(false);
                             if(resultTag == 'error'){
                             }else{
                             }
@@ -648,7 +692,7 @@ builderGrid.prototype.createGridPanel = function(_store,_sql){
 
     me.gridStore = Ext.create('Ext.data.Store', {
 	    model: 'sys_document_order_detail'+me.objId,
-	    //pageSize: 5000,
+	    pageSize: 5000,
 	    proxy: {
 	        type: 'jsonp',
 	        url: 'buildergrid_jsonp.jsp',
@@ -656,7 +700,7 @@ builderGrid.prototype.createGridPanel = function(_store,_sql){
                     dbName	    :	me.databaseName,
 	        		defaultRec	:	jsonToStr(eval('sys_document_order_detail'+me.objId)),
 	        		sessionId	:	sessionId,
-                    sysid       :   me.sys_id,
+                    sysid       :   me.sys_id_v == "" ? me.sys_id : me.sys_id_v,
                     worktime    :   me.mainObj===null?'0000':me.mainObj.getWorkTime(),
                     seria_num   :   "0",
 	        		table		:	me.table.detailTableView,
@@ -744,10 +788,10 @@ builderGrid.prototype.createGridPanel = function(_store,_sql){
                     //var tipMsg =
                     if (selections.length==1 && me.gridStatus == 1) {
                         //Ext.getCmp('mainstatusbar').setText(me.getTipMsg(selections[0]));
-                        //deleteAction.enable();
+                        deleteAction.enable();
                         //insertAction.enable();
                     } else {
-                        //deleteAction.disable();
+                        deleteAction.disable();
                         //Ext.getCmp('mainstatusbar').setText("正常状态");
                         //insertAction.disable();
                     }
@@ -817,13 +861,14 @@ builderGrid.prototype.initDefaultRecord = function(store ,docDefaultRecordG){
     store.clearFilter(true);
 };
 
-builderGrid.prototype.updateRecord = function(record ){
+builderGrid.prototype.updateRecord = function( record ){
     var me = this;
     if(record.get("entry_num")>0){
         var wsid = record.get("workstation_id");
         if( typeof(wsid)=='string' && wsid.length<32 ){
             record.set("workstation_id",m_workstation);
         }
+        if(me.table.detailTableTemp==''){return;}
         JbsManager.modifyDataForGrid(
             me.databaseName,
             me.table.detailTableTemp,
@@ -921,4 +966,38 @@ builderGrid.prototype.createTooltip = function(view) {
             }
         }
     });
+};
+
+builderGrid.prototype.getParameters = function(parametersIndexStr ,rec){
+    var result = "";
+    var me = this;
+    if(parametersIndexStr==''||parametersIndexStr===undefined){
+        return result;
+    }
+    var index;
+    var parametersIndexArray = parametersIndexStr.split(',');
+    var arrayCount = parametersIndexArray.length;
+    for(var i = 0 ; i < arrayCount ; ++i ){
+        var currentValue;
+        if(parametersIndexArray[i]=='u'||parametersIndexArray[i]=='U'){
+            currentValue = m_operator;
+        }else{
+            try{
+                index = parseInt( parametersIndexArray[i] )-1;
+            }catch(e){
+                console.log(e);
+            }
+            if( isNaN(index) ){
+                console.log("参数配置不正确...");
+                continue;
+            }
+            currentValue = rec.get(rec.fields.get( index ).name);
+        }
+        if((i+1)==arrayCount){
+            result = result + currentValue;
+        }else{
+            result = result + currentValue + ",";
+        }
+    }
+    return result;
 };

@@ -71,7 +71,7 @@ Ext.define("BSFrame.builder.menuGrid",{
                             if(m_set_permission!==undefined){
                                 var permissionTag = permissionCheck(m_set_permission,selected[0].get('sys_id'),'model_permission');
                                 if(permissionTag==1){
-                                    me.mainTabpanelObj.activeModle(selected[0].get('sys_id'));
+                                    me.mainTabpanelObj.activeModle(selected[0].get('sys_id'),selected[0].get('xtype'));
                                 }else{
                                     Ext.Msg.alert("提示信息 :","无此权限!");
                                 }

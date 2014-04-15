@@ -22,6 +22,7 @@
 	}else{
 	    sql = ( sqlParm.isEmpty() ? "select * from "+tableStr+" where sys_id = '"+sys_id+"' and work_time = '"+work_time+"' and seria_num = "+seria_num+" and workstation_id = '"+workstationId+"' order by entry_num" : sqlParm ) ; //变量代替
 	}
+	//System.out.println(sql);
 	JSONObject obj = new JSONObject();
 	DbProcManager dpm = new DbProcManager(databaseName);
 	String result = dpm.DbProcessToJsonp(sql, "", "sys_document_order_detail" ,start ,limit ,callbackStr ,defaultRec);
